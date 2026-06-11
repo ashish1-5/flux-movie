@@ -5,7 +5,7 @@
 const OMDB_KEY      = '31717567';
 const WATCHMODE_KEY = 'ixJ5KCa95HMmER3z2WVYTzbqxkPhidiskzmrzsZk';
 const YT_KEY        = 'AIzaSyBnSuF6sbRQfr06ARUlGW0kkuH6mJWhBes';
-const API_BASE      = 'https://flux-movie.onrender.com';
+const API_BASE      = 'https://flux-movie.onrender.com/api';
 const PER_PAGE      = 12;
 
 /* channels/keywords considered "official" for trailer & free-movie search */
