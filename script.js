@@ -54,7 +54,7 @@ const HINDI_POOL = [
   'Singham','Rowdy Rathore','Ek Tha Tiger','Jab Tak Hai Jaan','Student of the Year',
   'Raazi','Andhadhun','Badhaai Ho','Uri: The Surgical Strike','Bard of Blood',
   'Gully Boy','Article 15','Kabir Singh','Super 30','Chhichhore',
-  'War','Bala','Dil Bechara','Gunjan Saxena','Shakuntala Devi',
+  'War','Bala','Dil Bechara','Gunjan Saxena','Shakuntala Devi','gaddar',
   
   'Tanhaji','Sooryavanshi','83','Shershaah','Sardar Udham',
   'Pushpa: The Rise','Drishyam 2','Gangubai Kathiawadi','Gehraiyaan','Jalsa',
