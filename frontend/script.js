@@ -5,7 +5,7 @@
 const OMDB_KEY      = '41366622';
 const WATCHMODE_KEY = 'ixJ5KCa95HMmER3z2WVYTzbqxkPhidiskzmrzsZk';
 const YT_KEY        = 'AIzaSyBnSuF6sbRQfr06ARUlGW0kkuH6mJWhBes';
-const API_BASE      = 'https://flux-movie.onrender.com/api';
+const API_BASE      =  'https://flux-movie.onrender.com/api';
 const PER_PAGE      = 12;
 
 /* channels/keywords considered "official" for trailer & free-movie search */
@@ -23,7 +23,7 @@ const FULL_MOVIE_KW = [
   'full movie','free movies','youtube movies','moserbaer','rajshri',
 ];
 
-/* external embed servers shown in the Stream tab */
+/* external embed servers */
 const EXT_SERVERS = [
   { name:'MultiEmbed', badge:'esb-ads', label:'May have Ads',
     desc:'Popular aggregator. Use an adblocker for best experience.',
@@ -47,20 +47,18 @@ const EXT_SERVERS = [
 
 /* movie pools for home page */
 const HINDI_POOL = [
-  // Classics
   'Sholay','Dilwale Dulhania Le Jayenge','Mughal-E-Azam','Lagaan','Dil Chahta Hai',
   'Rang De Basanti','Taare Zameen Par','Black','Swades','Devdas',
-  // 2010s hits
   '3 Idiots','Dangal','PK','Bajrangi Bhaijaan','Sultan',
   'Dhoom 3','Chennai Express','Kick','Bang Bang','Dabangg',
   'Singham','Rowdy Rathore','Ek Tha Tiger','Jab Tak Hai Jaan','Student of the Year',
   'Raazi','Andhadhun','Badhaai Ho','Uri: The Surgical Strike','Bard of Blood',
   'Gully Boy','Article 15','Kabir Singh','Super 30','Chhichhore',
   'War','Bala','Dil Bechara','Gunjan Saxena','Shakuntala Devi',
-  // 2020s
+  
   'Tanhaji','Sooryavanshi','83','Shershaah','Sardar Udham',
   'Pushpa: The Rise','Drishyam 2','Gangubai Kathiawadi','Gehraiyaan','Jalsa',
-  'Runway 34','Samrat Prithviraj','Vikram Vedha','Brahmastra','Ponniyin Selvan',
+  'Runway 34','Samrat Prithviraj','Vikram Vedha','Ponniyin Selvan',
   'KGF Chapter 2','RRR','Jawan','Pathaan','Animal',
   'Dunki','12th Fail','Fighter','Gadar 2','OMG 2',
   'Tiger 3','Sam Bahadur','Rocky Aur Rani Kii Prem Kahaani','Bade Miyan Chote Miyan',
@@ -133,9 +131,17 @@ async function apiRequest(path, options = {}) {
   const token = localStorage.getItem('fm_token');
   const headers = { 'Content-Type': 'application/json', ...(options.headers || {}) };
   if (token) headers['Authorization'] = `Bearer ${token}`;
-  const res  = await fetch(`${API_BASE}${path}`, { ...options, headers });
-  const data = await res.json();
-  return { ok: res.ok, status: res.status, data };
+  // don't send body on GET/DELETE
+  const fetchOpts = { ...options, headers };
+  if (fetchOpts.body === undefined) delete fetchOpts.body;
+  try {
+    const res  = await fetch(`${API_BASE}${path}`, fetchOpts);
+    const data = await res.json();
+    return { ok: res.ok, status: res.status, data };
+  } catch (err) {
+    console.error('apiRequest error:', path, err);
+    return { ok: false, status: 0, data: { message: 'Network error' } };
+  }
 }
 
 /* decode JWT for the admin inspector (server already verified it) */
@@ -169,7 +175,11 @@ async function loadSession() {
     if (ok && data.user) {
       currentUser  = data.user;
       currentToken = token;
-      wishlist     = data.user.wishlist || [];
+      // fetch wishlist separately since /auth/me doesn't return it
+      try {
+        const wlRes = await apiRequest('/wishlist');
+        wishlist = wlRes.ok ? (wlRes.data.wishlist || []) : [];
+      } catch { wishlist = []; }
     } else {
       localStorage.removeItem('fm_token');
     }
@@ -208,7 +218,7 @@ function closeModal() { document.getElementById('authModal').classList.remove('o
 function closeModalOutside(e) { if (e.target === document.getElementById('authModal')) closeModal(); }
 
 function clearModalState() {
-  ['loginEmail','loginPass','signupName','signupEmail','signupPass']
+  ['loginEmail','loginPassword','signupName','signupEmail','signupPassword']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.querySelectorAll('.modal-err,.modal-success').forEach(el => {
     el.textContent = ''; el.classList.remove('show');
@@ -225,7 +235,7 @@ function showModalOk(msg)  { const e = document.getElementById('modalSuccess'); 
 
 async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPass').value;
+  const password = (document.getElementById('loginPass') ;
   if (!email || !password) { showModalErr('Fill in all fields.'); return; }
   try {
     const { ok, data } = await apiRequest('/auth/login', {
@@ -236,7 +246,13 @@ async function doLogin() {
     currentUser  = data.user;
     currentToken = data.token;
     wishlist     = data.user.wishlist || [];
+    // also fetch full wishlist from DB to be sure
+    try {
+      const wlRes = await apiRequest('/wishlist');
+      if (wlRes.ok) wishlist = wlRes.data.wishlist || [];
+    } catch {}
     renderAuthUI();
+    updateWLCount();
     closeModal();
     showToast(`Welcome back, ${data.user.name}! 👋`, 'success');
   } catch { showModalErr('Server error. Try again.'); }
@@ -258,6 +274,7 @@ async function doSignup() {
     currentToken = data.token;
     wishlist     = [];
     renderAuthUI();
+    updateWLCount();
     closeModal();
     showToast(`Welcome to Flux Movie, ${data.user.name}! 🎬`, 'success');
   } catch { showModalErr('Server error. Try again.'); }
@@ -287,10 +304,21 @@ async function toggleWishlist(movie) {
   if (!currentUser) { openModal('login'); showToast('Sign in to save movies.', 'info'); return; }
   const inWL = isInWishlist(movie.imdbID);
   try {
-    const { ok, data } = await apiRequest('/wishlist', {
-      method: inWL ? 'DELETE' : 'POST',
-      body: JSON.stringify({ imdbID: movie.imdbID, movie }),
-    });
+    const { ok, data } = await apiRequest(
+      inWL ? `/wishlist/${movie.imdbID}` : '/wishlist',
+      {
+        method: inWL ? 'DELETE' : 'POST',
+        body: inWL ? undefined : JSON.stringify({
+          imdbID: movie.imdbID,
+          Title: movie.Title,
+          Year: movie.Year,
+          Poster: movie.Poster,
+          imdbRating: movie.imdbRating,
+          Genre: movie.Genre,
+          Type: movie.Type,
+        }),
+      }
+    );
     if (!ok) { showToast(data.message || 'Error', 'error'); return; }
     wishlist = data.wishlist || [];
     updateWLCount();
@@ -300,7 +328,10 @@ async function toggleWishlist(movie) {
       btn.textContent = isInWishlist(movie.imdbID) ? '❤️ In Wishlist' : '🤍 Add to Wishlist';
       btn.classList.toggle('in-wl', isInWishlist(movie.imdbID));
     }
-  } catch { showToast('Error updating wishlist.', 'error'); }
+    // if wishlist page is open, refresh it
+    const wlPage = document.getElementById('wishlistPage');
+    if (wlPage && wlPage.classList.contains('active')) renderWishlistPage();
+  } catch (e) { console.error('toggleWishlist error:', e); showToast('Error updating wishlist.', 'error'); }
 }
 
 function showWishlist() {
@@ -309,20 +340,28 @@ function showWishlist() {
   showPage('wishlistPage');
   document.title = 'Wishlist — Flux Movie';
   renderWishlistPage();
+  document.getElementById('wishlistPage').classList.add('active');
 }
 
-function renderWishlistPage() {
+async function renderWishlistPage() {
   const grid = document.getElementById('wlContent');
   if (!currentUser) {
     grid.innerHTML = `<div class="wl-empty"><div class="wl-empty-icon">🔒</div><div class="wl-empty-title">Sign in to see your wishlist</div><button class="btn-primary" onclick="openModal('login')" style="margin-top:.5rem">Sign In</button></div>`;
     return;
   }
+  // always refresh from server when opening wishlist page
+  grid.innerHTML = '<div style="color:var(--muted);padding:2rem;text-align:center">Loading wishlist…</div>';
+  try {
+    const wlRes = await apiRequest('/wishlist');
+    if (wlRes.ok) { wishlist = wlRes.data.wishlist || []; updateWLCount(); }
+  } catch {}
   if (!wishlist.length) {
     grid.innerHTML = `<div class="wl-empty"><div class="wl-empty-icon">🎬</div><div class="wl-empty-title">Your wishlist is empty</div><div class="wl-empty-sub">Browse movies and tap ❤️ to save them here for later.</div><button class="btn-primary" onclick="showHome()" style="margin-top:.5rem">Explore Movies</button></div>`;
     return;
   }
-  grid.innerHTML = wishlist.map((m, i) => movieCard(m, i, false, true)).join('');
-  grid.querySelectorAll('img[data-src]').forEach(lazyImg);
+grid.innerHTML = `<div class="wl-grid">
+  ${wishlist.map((m, i) => movieCard(m, i, false, true)).join('')}
+</div>`;  grid.querySelectorAll('img[data-src]').forEach(lazyImg);
 }
 
 async function removeFromWL(imdbID) {
@@ -330,8 +369,8 @@ async function removeFromWL(imdbID) {
   const movie = wishlist.find(m => m.imdbID === imdbID);
   if (!movie) return;
   try {
-    const { ok, data } = await apiRequest('/wishlist', {
-      method: 'DELETE', body: JSON.stringify({ imdbID, movie }),
+    const { ok, data } = await apiRequest(`/wishlist/${imdbID}`, {
+      method: 'DELETE',
     });
     if (!ok) { showToast(data.message || 'Error', 'error'); return; }
     wishlist = data.wishlist || [];
@@ -635,12 +674,50 @@ function skCards(n) {
 
 /* 8.  API FETCHERS — OMDB, Watchmode, YouTube */
 
+const _omdbCache = {};
+const CACHE_KEY = 'fm_omdb_cache';
+const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
+
+// Load persisted cache from localStorage on startup
+try {
+  const saved = localStorage.getItem(CACHE_KEY);
+  if (saved) {
+    const { ts, data } = JSON.parse(saved);
+    if (Date.now() - ts < CACHE_TTL) Object.assign(_omdbCache, data);
+    else localStorage.removeItem(CACHE_KEY);
+  }
+} catch {}
+
+function saveCache() {
+  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _omdbCache })); } catch {}
+}
+
 async function fetchMovie(title) {
+  if (_omdbCache[title]) return _omdbCache[title];
   try {
     const r = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_KEY}&plot=short`);
     if (!r.ok) return null;
     const d = await r.json();
-    return d.Response === 'True' ? d : null;
+    if (d.Response === 'True') {
+      _omdbCache[title] = d;
+      saveCache();
+      return d;
+    }
+    // try search fallback if exact title not found
+    const rs = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${OMDB_KEY}&type=movie`);
+    if (!rs.ok) return null;
+    const ds = await rs.json();
+    if (ds.Response === 'True' && ds.Search?.length) {
+      const top = ds.Search[0];
+      const rd = await fetch(`https://www.omdbapi.com/?i=${top.imdbID}&apikey=${OMDB_KEY}&plot=short`);
+      const dd = await rd.json();
+      if (dd.Response === 'True') {
+        _omdbCache[title] = dd;
+        saveCache();
+        return dd;
+      }
+    }
+    return null;
   } catch { return null; }
 }
 async function fetchMovieByID(id) {
@@ -724,21 +801,9 @@ async function fetchMovieNamesFromYT(queries, maxPerQuery = 25) {
 }
 
 async function fetchMoviesFromYTThenOMDB(queries, limit = 40) {
-  const names   = await fetchMovieNamesFromYT(queries, 25);
-  const results = [];
-  const seen    = new Set();
-  for (let i = 0; i < Math.min(names.length, limit); i += 6) {
-    const batch = await Promise.allSettled(names.slice(i, i + 6).map(n => fetchMovie(n)));
-    batch.forEach(r => {
-      if (r.status === 'fulfilled' && r.value && !seen.has(r.value.imdbID)) {
-        seen.add(r.value.imdbID);
-        _movieMap[r.value.imdbID] = r.value;
-        results.push(r.value);
-      }
-    });
-  }
-  return results;
+  return [];
 }
+  
 
 /* 9.  MOVIE CARD BUILDER */
 
@@ -807,12 +872,13 @@ function clickCard(el) {
 async function loadHindiMovies() {
   const grid = document.getElementById('hindiGrid');
   grid.innerHTML = skCards(PER_PAGE);
-  const pool = [...HINDI_POOL].sort(() => Math.random() - .5);
-  // fetch all at once in parallel batches of 10
+  // fetch 60 movies (cached after first load = 0 extra API calls)
+  const pool = [...HINDI_POOL].sort(() => Math.random() - .5).slice(0, PER_PAGE);
   const all = [];
   for (let i = 0; i < pool.length; i += 10) {
     const batch = await Promise.allSettled(pool.slice(i, i + 10).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { all.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
+    await new Promise(r => setTimeout(r, 300));
   }
   hindiMovies      = [...all];
   _hindiPageMovies = hindiMovies.slice(0, PER_PAGE);
@@ -823,11 +889,13 @@ async function loadHindiMovies() {
 async function loadMovies() {
   const grid = document.getElementById('moviesGrid');
   grid.innerHTML = skCards(PER_PAGE);
+  // fetch 60 movies (cached after first load = 0 extra API calls)
   const pool = [...ENG_POOL].sort(() => Math.random() - .5);
   const all  = [];
   for (let i = 0; i < pool.length; i += 10) {
     const batch = await Promise.allSettled(pool.slice(i, i + 10).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { all.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
+    await new Promise(r => setTimeout(r, 300));
   }
   allMovies      = [...all];
   filteredMovies = [...allMovies];
@@ -872,8 +940,10 @@ function goPage(p) {
 }
 
 function filterGenre(btn, genre) {
-  document.querySelectorAll('#engGenrePills .gpill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  // clear all pills in this container first
+  document.querySelectorAll('#genrePills .gpill').forEach(b => b.classList.remove('active'));
+  // set active on the clicked one
+  if (btn) btn.classList.add('active');
   filteredMovies = genre
     ? allMovies.filter(m => (m.Genre || '').toLowerCase().includes(genre.toLowerCase()))
     : [...allMovies];
@@ -1157,7 +1227,7 @@ async function loadDetail(movie) {
       <button class="da-ghost" onclick="switchTab('ytmovie')">📺 Watch Free</button>
       <button class="da-ghost" onclick="switchTab('external')">⚡ Stream</button>
       <button class="da-wl ${inWL ? 'in-wl' : ''}" id="detailWLBtn" data-imdb="${m.imdbID}"
-        onclick="toggleWishlist(_movieMap['${m.imdbID}'] || movie)">
+        onclick="toggleWishlist(_movieMap['${m.imdbID}'])">
         ${inWL ? '❤️ In Wishlist' : '🤍 Add to Wishlist'}
       </button>`;
 
@@ -1242,16 +1312,17 @@ async function loadTrendingPage() {
   grid.innerHTML = skCards(PER_PAGE);
 
   const poolRes = [];
-  const pool    = [...TRENDING_POOL];
-  for (let i = 0; i < pool.length; i += 8) {
-    const batch = await Promise.allSettled(pool.slice(i, i + 8).map(t => fetchMovie(t)));
+const pool = [...TRENDING_POOL];
+  for (let i = 0; i < pool.length; i += 10) {
+    const batch = await Promise.allSettled(pool.slice(i, i + 10).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { poolRes.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
+     await new Promise(r => setTimeout(r, 300));
   }
   const ytRes = await fetchMoviesFromYTThenOMDB([
     'official trailer 2025 hindi movie',
     'official trailer 2025 english movie',
     'official trailer 2026 movie',
-  ], 30).catch(() => []);
+  ], 20).catch(() => []);
 
   const seen = new Set();
   const all  = [];
@@ -1303,7 +1374,7 @@ function goTrendingPage(p) {
 
 function trendingFilterGenre(btn, genre) {
   document.querySelectorAll('#trendingGenrePills .gpill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   trendingFiltered = genre
     ? trendingAll.filter(m => (m.Genre || '').toLowerCase().includes(genre.toLowerCase()))
     : [...trendingAll];
@@ -1347,6 +1418,15 @@ const NEW_RELEASES_POOL = [
   'The Batman','Top Gun: Maverick','Elvis',
   'Everything Everywhere All at Once',
   'Glass Onion: A Knives Out Mystery',
+  // Extra trending
+  'Interstellar','Inception','The Dark Knight','Oppenheimer',
+  'Dune','Dune: Part Two','Spider-Man: No Way Home',
+  'John Wick: Chapter 4','Mission: Impossible - Fallout',
+  'Guardians of the Galaxy Vol. 3','Ant-Man and the Wasp: Quantumania',
+  'Shershaah','Gangubai Kathiawadi','Bhool Bhulaiyaa 2',
+  'Brahmastra','KGF Chapter 2','RRR','Vikram',
+  'Pushpa: The Rise','Uri: The Surgical Strike',
+  'War','Pathaan','Jawan','Animal','Dunki',
 ];
 
 let newRelAll         = [];
@@ -1368,10 +1448,10 @@ async function loadNewRelPage() {
   grid.innerHTML = skCards(PER_PAGE);
 
   const poolRes = [];
-  const pool    = [...NEW_RELEASES_POOL];
-  for (let i = 0; i < pool.length; i += 8) {
+const pool = [...TRENDING_POOL].sort(() => Math.random() - .5).slice(0, 60);  for (let i = 0; i < pool.length; i += 10) {
     const batch = await Promise.allSettled(pool.slice(i, i + 8).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { poolRes.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
+     await new Promise(r => setTimeout(r, 300));
   }
 
   const ytRes = await fetchMoviesFromYTThenOMDB([
@@ -1440,7 +1520,7 @@ function goNewRelPage(p) {
 
 function newRelFilterGenre(btn, genre) {
   document.querySelectorAll('#newRelGenrePills .gpill').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+  if (btn) btn.classList.add('active');
   newRelFiltered = genre
     ? newRelAll.filter(m => (m.Genre || '').toLowerCase().includes(genre.toLowerCase()))
     : [...newRelAll];
@@ -1487,11 +1567,12 @@ async function showTopRated() {
 async function loadTopRatedPage() {
   const grid = document.getElementById('topRatedGrid');
   grid.innerHTML = skCards(PER_PAGE);
-  const pool    = [...TOP_RATED_POOL].sort(() => Math.random() - .5);
+  const pool    = [...TOP_RATED_POOL]; // fetch all, cache will handle repeats
   const results = [];
   for (let i = 0; i < pool.length; i += 8) {
     const batch = await Promise.allSettled(pool.slice(i, i + 8).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { results.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
+     await new Promise(r => setTimeout(r, 300));
   }
   topRatedAll = results.sort((a, b) => (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0));
   topRatedFiltered = [...topRatedAll];

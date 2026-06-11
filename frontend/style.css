@@ -1563,11 +1563,10 @@ footer {
   .section { padding: 1.8rem .9rem; }
 
   /* ── movie cards → 2 columns ── */
-  .movies-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: .6rem;
-}
+  .movies-grid,
+  .wl-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: .6rem;
   }
   .c-poster-img { height: 175px; }
   .sk-poster    { height: 175px; }
