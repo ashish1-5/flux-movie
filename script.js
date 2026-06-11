@@ -235,7 +235,7 @@ function showModalOk(msg)  { const e = document.getElementById('modalSuccess'); 
 
 async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
-  const password = (document.getElementById('loginPass') || document.getElementById('loginPass')).value;
+const password = document.getElementById('loginPass').value;
   if (!email || !password) { showModalErr('Fill in all fields.'); return; }
   try {
     const { ok, data } = await apiRequest('/auth/login', {
