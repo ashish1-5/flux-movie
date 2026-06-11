@@ -5,7 +5,7 @@
 const OMDB_KEY      = '31717567';
 const WATCHMODE_KEY = 'ixJ5KCa95HMmER3z2WVYTzbqxkPhidiskzmrzsZk';
 const YT_KEY        = 'AIzaSyBnSuF6sbRQfr06ARUlGW0kkuH6mJWhBes';
-const API_BASE      = 'http://localhost:5000/api';
+const API_BASE      = 'https://flux-movie.onrender.com';
 const PER_PAGE      = 12;
 
 /* channels/keywords considered "official" for trailer & free-movie search */
@@ -208,7 +208,7 @@ function closeModal() { document.getElementById('authModal').classList.remove('o
 function closeModalOutside(e) { if (e.target === document.getElementById('authModal')) closeModal(); }
 
 function clearModalState() {
-  ['loginEmail','loginPassword','signupName','signupEmail','signupPassword']
+  ['loginEmail','loginPass','signupName','signupEmail','signupPass']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.querySelectorAll('.modal-err,.modal-success').forEach(el => {
     el.textContent = ''; el.classList.remove('show');
@@ -225,7 +225,7 @@ function showModalOk(msg)  { const e = document.getElementById('modalSuccess'); 
 
 async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
-  const password = document.getElementById('loginPassword').value;
+  const password = document.getElementById('loginPass').value;
   if (!email || !password) { showModalErr('Fill in all fields.'); return; }
   try {
     const { ok, data } = await apiRequest('/auth/login', {
@@ -245,7 +245,7 @@ async function doLogin() {
 async function doSignup() {
   const name     = document.getElementById('signupName').value.trim();
   const email    = document.getElementById('signupEmail').value.trim();
-  const password = document.getElementById('signupPassword').value;
+  const password = document.getElementById('signupPass').value;
   if (!name || !email || !password) { showModalErr('Fill in all fields.'); return; }
   if (password.length < 6) { showModalErr('Password must be 6+ characters.'); return; }
   try {
