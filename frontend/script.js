@@ -312,7 +312,7 @@ function showWishlist() {
 }
 
 function renderWishlistPage() {
-  const grid = document.getElementById('wlGrid');
+  const grid = document.getElementById('wlContent');
   if (!currentUser) {
     grid.innerHTML = `<div class="wl-empty"><div class="wl-empty-icon">🔒</div><div class="wl-empty-title">Sign in to see your wishlist</div><button class="btn-primary" onclick="openModal('login')" style="margin-top:.5rem">Sign In</button></div>`;
     return;
