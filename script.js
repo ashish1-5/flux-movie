@@ -5,7 +5,7 @@
 const OMDB_KEY      = '31717567';
 const WATCHMODE_KEY = 'ixJ5KCa95HMmER3z2WVYTzbqxkPhidiskzmrzsZk';
 const YT_KEY        = 'AIzaSyBnSuF6sbRQfr06ARUlGW0kkuH6mJWhBes';
-const API_BASE      = 'https://flux-movie.onrender.com';
+const API_BASE      = 'http://localhost:5000/api';
 const PER_PAGE      = 12;
 
 /* channels/keywords considered "official" for trailer & free-movie search */
@@ -54,7 +54,7 @@ const HINDI_POOL = [
   'Singham','Rowdy Rathore','Ek Tha Tiger','Jab Tak Hai Jaan','Student of the Year',
   'Raazi','Andhadhun','Badhaai Ho','Uri: The Surgical Strike','Bard of Blood',
   'Gully Boy','Article 15','Kabir Singh','Super 30','Chhichhore',
-  'War','Bala','Dil Bechara','Gunjan Saxena','Shakuntala Devi','gaddar',
+  'War','Bala','Dil Bechara','Gunjan Saxena','Shakuntala Devi',
   
   'Tanhaji','Sooryavanshi','83','Shershaah','Sardar Udham',
   'Pushpa: The Rise','Drishyam 2','Gangubai Kathiawadi','Gehraiyaan','Jalsa',
@@ -218,7 +218,7 @@ function closeModal() { document.getElementById('authModal').classList.remove('o
 function closeModalOutside(e) { if (e.target === document.getElementById('authModal')) closeModal(); }
 
 function clearModalState() {
-  ['loginEmail','loginPass','signupName','signupEmail','signupPass']
+  ['loginEmail','loginPassword','signupName','signupEmail','signupPassword']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.querySelectorAll('.modal-err,.modal-success').forEach(el => {
     el.textContent = ''; el.classList.remove('show');
@@ -235,7 +235,7 @@ function showModalOk(msg)  { const e = document.getElementById('modalSuccess'); 
 
 async function doLogin() {
   const email    = document.getElementById('loginEmail').value.trim();
-const password = document.getElementById('loginPass').value;
+  const password = (document.getElementById('loginPass') || document.getElementById('loginPass')).value;
   if (!email || !password) { showModalErr('Fill in all fields.'); return; }
   try {
     const { ok, data } = await apiRequest('/auth/login', {
