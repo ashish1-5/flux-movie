@@ -2,7 +2,7 @@
 
 /* 1.  CONFIG & CONSTANTS */
 
-const OMDB_KEY      = '31717567';
+const OMDB_KEY      = '41366622';
 const WATCHMODE_KEY = 'ixJ5KCa95HMmER3z2WVYTzbqxkPhidiskzmrzsZk';
 const YT_KEY        = 'AIzaSyBnSuF6sbRQfr06ARUlGW0kkuH6mJWhBes';
 const API_BASE      = 'https://flux-movie.onrender.com/api';
