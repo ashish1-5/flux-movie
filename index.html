@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Flux Movie</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Outfit:wght@300;400;500;600&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+
+
+
+<!-- navbar
+-->
+
+<nav class="navbar">
+
+  <div class="logo" onclick="showHome()">FLUX MOVIE</div>
+
+  <div class="nav-links" id="navLinks">
+    <button class="nav-link" id="navTrending"    onclick="showTrending();closeMenu()">🔥 Trending</button>
+    <button class="nav-link" id="navNewReleases" onclick="showNewReleases();closeMenu()">✨ New Releases</button>
+    <button class="nav-link" id="navTopRated"    onclick="showTopRated();closeMenu()">⭐ Top Rated</button>
+    <button class="nav-link" id="navWishlist"    onclick="showWishlist();closeMenu()">❤️ Wishlist</button>
+    <button class="nav-link" id="navAdmin"       onclick="showAdmin();closeMenu()" style="display:none">⚡ Admin</button>
+  </div>
+
+  <div class="nav-right">
+
+    <div class="search-wrap">
+      <span class="search-icon">⌕</span>
+      <input type="text" id="searchInput" placeholder="Search movies…" autocomplete="off"/>
+      <div class="search-drop" id="searchDrop"></div>
+    </div>
+
+    <div id="navAuth">
+      <button class="btn-auth-icon" onclick="openModal('login')" title="Sign In / Sign Up">👤</button>
+    </div>
+
+    <div id="navUser" style="display:none">
+      <div class="nav-avatar" id="navAvatar" onclick="toggleAvatarDrop()">
+        A
+        <span class="wishlist-count" id="wlCount">0</span>
+        <div class="avatar-drop" id="avatarDrop">
+          <a onclick="showWishlist()">❤️ My Wishlist</a>
+          <a id="adminLink" onclick="showAdmin()" style="display:none">⚡ Admin Panel</a>
+          <hr/>
+          <a onclick="logout()">Sign Out</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- hamburger — mobile only -->
+  <button class="hamburger" id="hamburger" onclick="toggleMenu()" aria-label="Menu">
+    <span></span><span></span><span></span>
+  </button>
+
+</nav>
+
+<div class="page" id="homePage">
+
+
+  <!-- trending at nav -->
+
+  <div class="ticker-bar">
+    <div class="ticker-label">🔥 Trending</div>
+    <div class="ticker-track" id="tickerTrack">
+      <div class="skel" style="width:120px;height:20px;margin:0 2rem"></div>
+      <div class="skel" style="width:120px;height:20px;margin:0 2rem"></div>
+    </div>
+  </div>
+
+
+  <!-- hero home -->
+
+  <div class="hero" id="heroBanner">
+    <div class="hero-glow"></div>
+    <div class="hero-grid"></div>
+    <div class="hero-content">
+      <div class="hero-eyebrow">✦ Every Movie, One Place</div>
+      <h1>Your Universe<br/>of <span>Cinema</span></h1>
+      <p>Hindi, English, Trailers, Free movies on YouTube &amp; every streaming platform — all in one place.</p>
+      <div class="hero-btns">
+        <button class="btn-primary"
+          onclick="document.getElementById('hindiSec').scrollIntoView({behavior:'smooth'})">
+          🎬 Browse Movies
+        </button>
+        <button class="btn-outline"
+          onclick="showTrending()">
+          🔥 Trending
+        </button>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- hindi mov -->
+
+  <div class="section" id="hindiSec">
+    <div class="sec-header">
+      <div class="sec-title hindi-title">Hindi Movies</div>
+     
+    </div>
+    <div class="movies-grid" id="hindiGrid"></div>
+  </div>
+
+
+  <!-- hollywood movies -->
+
+  <div class="section" id="engSec">
+    <div class="sec-header">
+      <div class="sec-title eng-title">Popular Movies</div>
+    </div>
+
+    <div class="genre-pills" id="genrePills">
+      <button class="gpill active" onclick="filterGenre(this,'')">All</button>
+      <button class="gpill" onclick="filterGenre(this,'Action')">Action</button>
+      <button class="gpill" onclick="filterGenre(this,'Drama')">Drama</button>
+      <button class="gpill" onclick="filterGenre(this,'Comedy')">Comedy</button>
+      <button class="gpill" onclick="filterGenre(this,'Thriller')">Thriller</button>
+      <button class="gpill" onclick="filterGenre(this,'Sci-Fi')">Sci-Fi</button>
+      <button class="gpill" onclick="filterGenre(this,'Horror')">Horror</button>
+      <button class="gpill" onclick="filterGenre(this,'Animation')">Animation</button>
+    </div>
+
+    <div class="movies-grid" id="moviesGrid"></div>
+    <div class="pagination"  id="pagination"></div>
+  </div>
+
+
+  <!--footer -->
+
+  <footer>
+    <div>
+      <div class="f-logo">FLUX MOVIE</div>
+      <p class="f-desc">Hindi &amp; English movies, official trailers, and streaming guides.</p>
+    </div>
+    <div class="f-col">
+      <h4>Discover</h4>
+      <a onclick="showTrending()" href="javascript:void(0)">Trending</a>
+      <a onclick="showNewReleases()" href="javascript:void(0)">New Releases</a>
+      <a onclick="showTopRated()" href="javascript:void(0)">Top Rated</a>
+    </div>
+    <div class="f-col">
+      <h4>Account</h4>
+      <a onclick="openModal('login')" href="javascript:void(0)" class="footer-signin">Sign In</a>
+      <a onclick="showWishlist()"    href="javascript:void(0)">Wishlist</a>
+    </div>
+    <div class="f-col">
+      <h4>About</h4>
+      <a onclick="showAbout()" href="javascript:void(0)">About Flux</a>
+      <a onclick="showPrivacy()" href="javascript:void(0)">Privacy</a>
+      <a onclick="showContact()" href="javascript:void(0)">Contact</a>
+    </div>
+  </footer>
+
+  <div class="f-bottom">
+    <p style="font-size:.76rem;color:var(--muted)">© 2026 Flux Movie.</p>
+    <div style="display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:var(--muted)">
+      Powered by
+      <span class="f-badge">OMDB</span>
+      <span class="f-badge">YOUTUBE</span>
+      <span class="f-badge">WATCHMODE</span>
+    </div>
+  </div>
+
+
+</div>
+
+
+<!-- wishlist -->
+
+<div class="page" id="wishlistPage">
+
+
+  <div class="wl-hero">
+    <button class="back-btn" id="wlBackBtn" onclick="showHome()" style="margin-bottom:1rem">
+      ← Back to Home
+    </button>
+    <h1>❤️ My Wishlist</h1>
+    <p id="wlSubtitle">Your saved movies</p>
+  </div>
+
+
+  <div id="wlContent"></div>
+
+
+</div>
+
+
+
+
+<div class="page" id="detailPage">
+
+
+  <!--details poster -->
+
+  <div class="d-hero">
+    <div class="d-hero-bg"></div>
+    <div class="d-hero-grad"></div>
+    <div class="d-inner">
+
+      <div class="d-poster">
+        <img id="dPoster" src="" alt=""/>
+      </div>
+
+      <div class="d-info">
+        <div class="d-badges"   id="dBadges"></div>
+        <h1 class="d-title"    id="dTitle">Loading…</h1>
+        <div class="d-meta"    id="dMeta"></div>
+        <p class="d-plot"      id="dPlot"></p>
+        <div class="d-actions" id="dActions"></div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- details -->
+
+  <div class="d-content">
+
+    <!-- back button — text + onclick set by showDetail() in app.js -->
+    <div style="margin-bottom:1.5rem">
+      <button class="back-btn" id="detailBackBtn">← Back to Home</button>
+    </div>
+
+
+    <!-- watch sec -->
+
+    <div class="d-sec">
+      <div class="d-sec-head">Watch</div>
+
+      <!-- tab buttons -->
+      <div class="watch-tabs">
+        <button class="wtab yt-tab active" onclick="switchTab('trailer')">🎬 Official Trailer</button>
+        <button class="wtab ytm-tab"       onclick="switchTab('ytmovie')">📺 Watch Free on YouTube</button>
+        <button class="wtab ext-tab"       onclick="switchTab('external')">⚡ External Servers</button>
+      </div>
+
+
+      <!-- OFFICIAL TRAILER -->
+      <div class="tab-panel active" id="tab-trailer">
+
+        <div id="trailerContainer">
+          <div class="skel" style="height:300px;border-radius:12px"></div>
+        </div>
+
+        <div class="space-hint" id="spaceHint">
+          <kbd>Space</kbd> Play / Pause trailer
+        </div>
+
+      </div>
+
+
+      <!--  : FREE YOUTUBE MOVIE  -->
+      <div class="tab-panel" id="tab-ytmovie">
+
+        <div id="ytMovieContainer">
+          <div class="skel" style="height:300px;border-radius:12px"></div>
+        </div>
+
+        <p style="font-size:.72rem;color:var(--muted);margin-top:.65rem;line-height:1.6">
+          ℹ️ Only officially uploaded movies from verified studio/distributor channels are shown.
+        </p>
+
+      </div>
+
+
+      <!--  EXTERNAL SERVERS -->
+      <div class="tab-panel" id="tab-external">
+
+        <div class="ext-disclaimer">
+          <span class="ext-disclaimer-icon">⚠️</span>
+          <div class="ext-disclaimer-text">
+            <b>Disclaimer:</b> These are third-party links. They may contain <b>ads</b> —
+            use an ad-blocker. Links open in a new tab. Flux Movie is not responsible for
+            third-party content. <b>Educational/personal use only.</b>
+          </div>
+        </div>
+
+        <div class="ext-servers-grid" id="extServersGrid">
+          <div class="skel" style="height:130px;border-radius:10px"></div>
+          <div class="skel" style="height:130px;border-radius:10px"></div>
+          <div class="skel" style="height:130px;border-radius:10px"></div>
+        </div>
+
+      </div>
+
+
+    </div>
+    <!-- end watch d-sec -->
+
+
+    <!-- platform movies  -->
+
+    <div class="d-sec">
+      <div class="d-sec-head">Official Platforms</div>
+      <div id="watchGrid" class="watch-grid">
+        <div class="skel" style="height:125px;border-radius:12px"></div>
+        <div class="skel" style="height:125px;border-radius:12px"></div>
+        <div class="skel" style="height:125px;border-radius:12px"></div>
+      </div>
+    </div>
+
+
+    <div class="d-sec">
+      <div class="d-sec-head">Movie Details</div>
+      <div id="infoGrid" class="info-grid">
+        <div class="icell"><div class="skel" style="height:36px"></div></div>
+        <div class="icell"><div class="skel" style="height:36px"></div></div>
+        <div class="icell"><div class="skel" style="height:36px"></div></div>
+        <div class="icell"><div class="skel" style="height:36px"></div></div>
+      </div>
+    </div>
+
+
+  </div>
+  <!-- end d-content -->
+
+  <div class="detail-mini-footer">
+    <span>FLUX MOVIE</span>
+    <span class="dmf-dot">·</span>
+    <span>OMDB</span>
+    <span class="dmf-dot">·</span>
+    <span>YOUTUBE</span>
+    <span class="dmf-dot">·</span>
+    <span>WATCHMODE</span>
+
+  </div>
+
+</div>
+
+
+<!--admin panel
+-->
+
+<div class="page" id="adminPage">
+
+
+  <!-- admin hero -->
+
+  <div class="admin-hero">
+
+    <button class="back-btn" onclick="showHome()" style="margin-bottom:1.2rem">
+      ← Back to Home
+    </button>
+
+    <div class="admin-hero-inner">
+      <span class="admin-badge-big">🛡️ Admin Panel</span>
+    </div>
+
+    <h1 style="font-family:'Syne',sans-serif;font-weight:800;font-size:2rem;margin-bottom:.25rem">
+      Flux Admin
+    </h1>
+    <p style="font-size:.85rem;color:var(--muted);margin-bottom:0">
+      Manage users, view audit logs, and inspect JWT tokens.
+    </p>
+
+    <div class="admin-tabs" style="margin-top:1.5rem">
+      <button class="admin-tab active" onclick="adminTab(this,'overview')">Overview</button>
+      <button class="admin-tab"        onclick="adminTab(this,'users')">Users</button>
+      <button class="admin-tab"        onclick="adminTab(this,'jwt')">JWT Inspector</button>
+      <button class="admin-tab"        onclick="adminTab(this,'logs')">Audit Log</button>
+    </div>
+
+  </div>
+
+
+  <!-- admint content -->
+
+  <div class="admin-content">
+
+
+
+    <div id="ap-overview">
+
+      <!-- stat cards injected by renderAdminOverview() in app.js -->
+      <div class="admin-stats" id="adminStats"></div>
+
+      <div style="font-family:'Syne',sans-serif;font-weight:700;margin-bottom:1rem;
+                  color:var(--muted);text-transform:uppercase;letter-spacing:.08em;font-size:.75rem">
+        Recent Activity
+      </div>
+
+      <div class="admin-log" id="adminLogOverview"></div>
+
+    </div>
+
+    <div id="ap-users" style="display:none">
+
+      <div class="admin-search-bar">
+        <input type="text" id="adminUserSearch"
+               placeholder="Search by name or email…"
+               oninput="renderUsersTable()"/>
+      </div>
+
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr>
+              <th>User</th>
+              <th>Email</th>
+              <th>Role</th>
+              <th>Wishlist</th>
+              <th>Joined</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="adminUsersBody"></tbody>
+        </table>
+      </div>
+
+    </div>
+
+    <div id="ap-jwt" style="display:none">
+
+      <div class="jwt-info-box">
+        <h3>🔐 Your Current JWT Token</h3>
+        <div class="jwt-parts">
+          <span class="jwt-part-label jwt-pl-h">Header</span>
+          <span style="color:var(--muted);font-size:.7rem">.</span>
+          <span class="jwt-part-label jwt-pl-p">Payload</span>
+          <span style="color:var(--muted);font-size:.7rem">.</span>
+          <span class="jwt-part-label jwt-pl-s">Signature</span>
+        </div>
+        <div class="jwt-token-display" id="jwtDisplay">Sign in to view your token</div>
+      </div>
+
+      <div class="jwt-info-box" style="margin-top:1rem">
+        <h3>📦 Decoded Payload</h3>
+        <div class="jwt-token-display" id="jwtPayloadDisplay"
+             style="max-height:160px;color:var(--text)">—</div>
+      </div>
+
+      <div style="font-size:.76rem;color:var(--muted);margin-top:1rem;line-height:1.7;
+                  background:var(--card);border:1px solid var(--border);border-radius:10px;padding:1rem">
+        <b style="color:var(--text)">How JWT works in Flux Movie:</b><br/>
+        Tokens are signed with HMAC-SHA256 using a secret key. The payload contains user email,
+        name, role, and expiry (iat/exp). The signature prevents tampering — any change to header
+        or payload invalidates the token. Tokens expire after 7 days. In a real backend, the
+        server verifies the signature on every protected route.
+      </div>
+
+    </div>
+
+    <div id="ap-logs" style="display:none">
+      <div class="admin-log" id="adminLogFull"></div>
+    </div>
+
+
+  </div>
+
+</div>
+
+
+<!-- trending -->
+
+<div class="page" id="trendingPage">
+
+  <div class="discover-hero trending-hero">
+    <div class="discover-hero-bg"></div>
+    <div class="discover-hero-glow"></div>
+    <div class="discover-hero-content">
+      <div class="discover-eyebrow">🔥 What Everyone Is Watching</div>
+      <h1>Trending <span>Now</span></h1>
+      <p>Top-rated movies ranked by IMDb score — Hindi &amp; English combined.</p>
+    </div>
+  </div>
+
+  <div class="section" id="trendingSec">
+    <div class="sec-header">
+      <div class="sec-title" style="background:linear-gradient(90deg,var(--gold),var(--orange));-webkit-background-clip:text;-webkit-text-fill-color:transparent">🔥 Trending Movies</div>
+    </div>
+    <div class="genre-pills" id="trendingGenrePills">
+      <button class="gpill active" onclick="trendingFilterGenre(this,'')">All</button>
+      <button class="gpill" onclick="trendingFilterGenre(this,'Action')">Action</button>
+      <button class="gpill" onclick="trendingFilterGenre(this,'Drama')">Drama</button>
+      <button class="gpill" onclick="trendingFilterGenre(this,'Comedy')">Comedy</button>
+      <button class="gpill" onclick="trendingFilterGenre(this,'Thriller')">Thriller</button>
+      <button class="gpill" onclick="trendingFilterGenre(this,'Sci-Fi')">Sci-Fi</button>
+      <button class="gpill" onclick="trendingFilterGenre(this,'Horror')">Horror</button>
+      <button class="gpill" onclick="trendingFilterGenre(this,'Animation')">Animation</button>
+    </div>
+    <div class="movies-grid" id="trendingGrid"></div>
+    <div class="pagination"  id="trendingPagination"></div>
+  </div>
+
+  <footer>
+    <div>
+      <div class="f-logo">FLUX MOVIE</div>
+      <p class="f-desc">Hindi &amp; English movies, official trailers, and streaming guides.</p>
+    </div>
+    <div class="f-col"><h4>Discover</h4><a onclick="showTrending()" href="javascript:void(0)">Trending</a><a onclick="showNewReleases()" href="javascript:void(0)">New Releases</a><a onclick="showTopRated()" href="javascript:void(0)">Top Rated</a></div>
+    <div class="f-col"><h4>Account</h4><a onclick="openModal('login')" href="javascript:void(0)" class="footer-signin">Sign In</a><a onclick="showWishlist()" href="javascript:void(0)">Wishlist</a></div>
+    <div class="f-col"><h4>About</h4><a onclick="showAbout()" href="javascript:void(0)">About Flux</a><a onclick="showPrivacy()" href="javascript:void(0)">Privacy</a><a onclick="showContact()" href="javascript:void(0)">Contact</a></div>
+  </footer>
+  <div class="f-bottom">
+    <p style="font-size:.76rem;color:var(--muted)">© 2026 Flux Movie.</p>
+    <div style="display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:var(--muted)">Powered by <span class="f-badge">OMDB</span><span class="f-badge">YOUTUBE</span><span class="f-badge">WATCHMODE</span></div>
+  </div>
+
+</div>
+
+<!-- new release -->
+
+<div class="page" id="newReleasesPage">
+
+  <div class="discover-hero newrel-hero">
+    <div class="discover-hero-bg"></div>
+    <div class="discover-hero-glow newrel-glow"></div>
+    <div class="discover-hero-content">
+      <div class="discover-eyebrow">🆕 Fresh Drops</div>
+      <h1>New <span class="newrel-span">Releases</span></h1>
+      <p>The latest movies from 2025–2026 — just added to Flux Movie.</p>
+    </div>
+  </div>
+
+  <div class="section" id="newRelSec">
+    <div class="sec-header">
+      <div class="sec-title" style="background:linear-gradient(90deg,var(--accent),var(--green));-webkit-background-clip:text;-webkit-text-fill-color:transparent">🆕 New Releases</div>
+    </div>
+    <div class="genre-pills" id="newRelGenrePills">
+      <button class="gpill active" onclick="newRelFilterGenre(this,'')">All</button>
+      <button class="gpill" onclick="newRelFilterGenre(this,'Action')">Action</button>
+      <button class="gpill" onclick="newRelFilterGenre(this,'Drama')">Drama</button>
+      <button class="gpill" onclick="newRelFilterGenre(this,'Comedy')">Comedy</button>
+      <button class="gpill" onclick="newRelFilterGenre(this,'Thriller')">Thriller</button>
+      <button class="gpill" onclick="newRelFilterGenre(this,'Sci-Fi')">Sci-Fi</button>
+      <button class="gpill" onclick="newRelFilterGenre(this,'Horror')">Horror</button>
+      <button class="gpill" onclick="newRelFilterGenre(this,'Animation')">Animation</button>
+    </div>
+    <div class="movies-grid" id="newRelGrid"></div>
+    <div class="pagination"  id="newRelPagination"></div>
+  </div>
+
+  <footer>
+    <div>
+      <div class="f-logo">FLUX MOVIE</div>
+      <p class="f-desc">Hindi &amp; English movies, official trailers, and streaming guides.</p>
+    </div>
+    <div class="f-col"><h4>Discover</h4><a onclick="showTrending()" href="javascript:void(0)">Trending</a><a onclick="showNewReleases()" href="javascript:void(0)">New Releases</a><a onclick="showTopRated()" href="javascript:void(0)">Top Rated</a></div>
+    <div class="f-col"><h4>Account</h4><a onclick="openModal('login')" href="javascript:void(0)" class="footer-signin">Sign In</a><a onclick="showWishlist()" href="javascript:void(0)">Wishlist</a></div>
+    <div class="f-col"><h4>About</h4><a onclick="showAbout()" href="javascript:void(0)">About Flux</a><a onclick="showPrivacy()" href="javascript:void(0)">Privacy</a><a onclick="showContact()" href="javascript:void(0)">Contact</a></div>
+  </footer>
+  <div class="f-bottom">
+    <p style="font-size:.76rem;color:var(--muted)">© 2026 Flux Movie.</p>
+    <div style="display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:var(--muted)">Powered by <span class="f-badge">OMDB</span><span class="f-badge">YOUTUBE</span><span class="f-badge">WATCHMODE</span></div>
+  </div>
+
+</div>
+
+<!-- top rated -->
+<div class="page" id="topRatedPage">
+  <div class="discover-hero toprated-hero">
+    <div class="discover-hero-bg"></div>
+    <div class="discover-hero-glow toprated-glow"></div>
+    <div class="discover-hero-content">
+      <div class="discover-eyebrow">⭐ IMDb Top Picks</div>
+      <h1>Top <span class="toprated-span">Rated</span></h1>
+      <p>The highest-rated movies of all time — curated from IMDb's top 250, Hindi &amp; English.</p>
+    </div>
+  </div>
+  <div class="section">
+    <div class="sec-header">
+      <div class="sec-title" style="background:linear-gradient(90deg,#f5c518,#e6a817);-webkit-background-clip:text;-webkit-text-fill-color:transparent">⭐ Top Rated Movies</div>
+    </div>
+    <div class="genre-pills" id="topRatedGenrePills">
+      <button class="gpill active" onclick="topRatedFilterGenre(this,'')">All</button>
+      <button class="gpill" onclick="topRatedFilterGenre(this,'Action')">Action</button>
+      <button class="gpill" onclick="topRatedFilterGenre(this,'Drama')">Drama</button>
+      <button class="gpill" onclick="topRatedFilterGenre(this,'Comedy')">Comedy</button>
+      <button class="gpill" onclick="topRatedFilterGenre(this,'Thriller')">Thriller</button>
+      <button class="gpill" onclick="topRatedFilterGenre(this,'Sci-Fi')">Sci-Fi</button>
+      <button class="gpill" onclick="topRatedFilterGenre(this,'Crime')">Crime</button>
+      <button class="gpill" onclick="topRatedFilterGenre(this,'Animation')">Animation</button>
+    </div>
+    <div class="movies-grid" id="topRatedGrid"></div>
+    <div class="pagination"  id="topRatedPagination"></div>
+  </div>
+  <footer>
+    <div><div class="f-logo">FLUX MOVIE</div><p class="f-desc">Hindi &amp; English movies, official trailers, and streaming guides.</p></div>
+    <div class="f-col"><h4>Discover</h4><a onclick="showTrending()" href="javascript:void(0)">Trending</a><a onclick="showNewReleases()" href="javascript:void(0)">New Releases</a><a onclick="showTopRated()" href="javascript:void(0)">Top Rated</a></div>
+    <div class="f-col"><h4>Account</h4><a onclick="openModal('login')" href="javascript:void(0)" class="footer-signin">Sign In</a><a onclick="showWishlist()" href="javascript:void(0)">Wishlist</a></div>
+    <div class="f-col"><h4>About</h4><a onclick="showAbout()" href="javascript:void(0)">About Flux</a><a onclick="showPrivacy()" href="javascript:void(0)">Privacy</a><a onclick="showContact()" href="javascript:void(0)">Contact</a></div>
+  </footer>
+  <div class="f-bottom">
+    <p style="font-size:.76rem;color:var(--muted)">© 2026 Flux Movie.</p>
+    <div style="display:flex;align-items:center;gap:.45rem;font-size:.7rem;color:var(--muted)">Powered by <span class="f-badge">OMDB</span><span class="f-badge">YOUTUBE</span><span class="f-badge">WATCHMODE</span></div>
+  </div>
+</div>
+
+<!--about-->
+
+<div class="page" id="aboutPage">
+  <div class="static-hero">
+    <div class="static-hero-glow"></div>
+    <div class="static-hero-content">
+      <div class="discover-eyebrow">🎬 Our Story</div>
+      <h1>About <span>Flux Movie</span></h1>
+      <p>One platform. Every movie.</p>
+    </div>
+  </div>
+  <div class="static-body">
+    <button class="back-btn" onclick="showHome()" style="margin-bottom:1.5rem">← Back to Home</button>
+    <div class="static-card">
+      <h2>🎬 All Movies at One Place</h2>
+      <p>Stop switching between apps. Flux Movie brings every Hindi and English movie — Bollywood blockbusters, Hollywood hits, indie gems, and classics — all under one roof. Search once, find everything.</p>
+    </div>
+    <div class="static-card">
+      <h2>💸 Compare Prices Before You Pay</h2>
+      <p>Why pay more? Flux Movie shows you every platform where a movie is available — Netflix, Prime Video, JioCinema, Hotstar, SonyLIV and more — along with their prices in Indian Rupees. Pick the cheapest option instantly.</p>
+    </div>
+    <div class="static-card">
+      <h2>📺 Free Movies — We Find Them for You</h2>
+      <p>Many great movies are available completely free on YouTube and ad-supported platforms. Flux Movie highlights them first so you never pay for something you can watch for free.</p>
+    </div>
+    <div class="static-card">
+      <h2>What we offer</h2>
+      <ul class="static-list">
+        <li>🎬 Official trailers &amp; free full movies on YouTube</li>
+        <li>💰 Price comparison in ₹ across all OTT platforms</li>
+        <li>🔥 Daily trending charts — Hindi &amp; English</li>
+        <li>✨ Latest 2025–2026 releases updated regularly</li>
+        <li>⭐ IMDb top-rated picks curated by rating</li>
+        <li>🌐 Streaming availability — Netflix, Prime, Hotstar &amp; more</li>
+        <li>❤️ Personal wishlist to save movies for later</li>
+        <li>🔍 Search across thousands of Hindi &amp; English titles</li>
+      </ul>
+    </div>
+    <div class="static-card">
+      <h2>Powered by</h2>
+      <p>Flux Movie uses the <strong>OMDB API</strong> for movie data and IMDb ratings, <strong>YouTube Data API</strong> for trailers and free movies, and <strong>Watchmode API</strong> for real-time streaming availability and pricing. All prices are converted to Indian Rupees (₹).</p>
+    </div>
+    <div class="static-card">
+      <h2>Contact Us</h2>
+      <p>Have feedback or found a bug? Reach out at <a href="mailto:hello@fluxmovie.app" style="color:var(--accent)">hello@fluxmovie.app</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- P A G E  —  P R I V A C Y
+-->
+<div class="page" id="privacyPage">
+  <div class="static-hero">
+    <div class="static-hero-glow"></div>
+    <div class="static-hero-content">
+      <div class="discover-eyebrow">🔒 Your Data</div>
+      <h1>Privacy <span>Policy</span></h1>
+      <p>Last updated: may 2026</p>
+    </div>
+  </div>
+  <div class="static-body">
+    <button class="back-btn" onclick="showHome()" style="margin-bottom:1.5rem">← Back to Home</button>
+    <div class="static-card">
+      <h2>Data We Collect</h2>
+      <p>When you create an account, we store your <strong>name</strong>, <strong>email address</strong>, and <strong>wishlist</strong>. Passwords are hashed using bcrypt and never stored in plain text.</p>
+    </div>
+    <div class="static-card">
+      <h2>How We Use It</h2>
+      <ul class="static-list">
+        <li>To provide login and wishlist functionality</li>
+        <li>To personalise your experience</li>
+        <li>We do <strong>not</strong> sell your data to third parties</li>
+        <li>We do <strong>not</strong> serve targeted advertisements</li>
+      </ul>
+    </div>
+    <div class="static-card">
+      <h2>Third-Party Services</h2>
+      <p>Flux Movie uses OMDB, YouTube, and Watchmode APIs to fetch movie data. These services have their own privacy policies. Embedded YouTube players may set cookies per Google's privacy policy.</p>
+    </div>
+    <div class="static-card">
+      <h2>Account Deletion</h2>
+      <p>You can request deletion of your account and all associated data by emailing us at <a href="mailto:hello@fluxmovie.app" style="color:var(--accent)">hello@fluxmovie.app</a>. We will process it within 7 days.</p>
+    </div>
+    <div class="static-card">
+      <h2>Contact</h2>
+      <p>For privacy concerns: <a href="mailto:hello@fluxmovie.app" style="color:var(--accent)">hello@fluxmovie.app</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- P A G E  —  C O N T A C T-->
+
+<div class="page" id="contactPage">
+  <div class="static-hero">
+    <div class="static-hero-glow"></div>
+    <div class="static-hero-content">
+      <div class="discover-eyebrow">✉️ Get in Touch</div>
+      <h1>Contact <span>Us</span></h1>
+      <p>We'd love to hear from you.</p>
+    </div>
+  </div>
+  <div class="static-body">
+    <button class="back-btn" onclick="showHome()" style="margin-bottom:1.5rem">← Back to Home</button>
+    <div class="static-card">
+      <h2>📧 Email</h2>
+      <p>General enquiries &amp; feedback:<br/>
+      <a href="mailto:hello@fluxmovie.app" style="color:var(--accent);font-size:1.05rem">hello@fluxmovie.app</a></p>
+    </div>
+    <div class="static-card">
+      <h2>🐛 Report a Bug</h2>
+      <p>Found something broken? Email us at:<br/>
+      <a href="mailto:bugs@fluxmovie.app" style="color:var(--accent);font-size:1.05rem">bugs@fluxmovie.app</a></p>
+    </div>
+    <div class="static-card">
+      <h2>⏱️ Response Time</h2>
+      <p>We typically respond within <strong>24–48 hours</strong>. Flux Movie is an independent project — thank you for your patience!</p>
+    </div>
+  </div>
+</div>
+
+<!-- M O D A L  —  A U T H
+-->
+
+<div class="modal-overlay" id="authModal" onclick="closeModalOutside(event)">
+  <div class="modal">
+
+    <button class="modal-close" onclick="closeModal()">✕</button>
+
+    <div class="modal-logo">FLUX MOVIE</div>
+    <h2 class="modal-title" id="modalTitle">Welcome back</h2>
+    <p  class="modal-sub"   id="modalSub">Sign in to save your watchlist</p>
+
+    <div class="modal-tabs">
+      <button class="modal-tab active" id="tabLogin"  onclick="switchModalTab('login')">Sign In</button>
+      <button class="modal-tab"        id="tabSignup" onclick="switchModalTab('signup')">Sign Up</button>
+    </div>
+
+    <div class="modal-err"     id="modalErr"></div>
+    <div class="modal-success" id="modalSuccess"></div>
+
+
+    <!-- 
+         MODAL  ›  SIGN IN FORM
+          -->
+
+    <div id="loginForm" class="modal-form">
+
+      <div class="modal-field">
+        <label>Email</label>
+        <input type="email"    id="loginEmail" placeholder="you@email.com"/>
+      </div>
+
+      <div class="modal-field">
+        <label>Password</label>
+        <input type="password" id="loginPass"  placeholder="Your password"/>
+      </div>
+
+      <button class="modal-btn" onclick="doLogin()">Sign In →</button>
+
+      <p class="modal-switch">
+        Don't have an account? <a onclick="switchModalTab('signup')">Sign Up</a>
+      </p>
+
+    </div>
+
+
+    <!-- MODAL  ›  SIGN UP FORM
+         -->
+
+    <div id="signupForm" class="modal-form" style="display:none">
+
+      <div class="modal-field">
+        <label>Name</label>
+        <input type="text"     id="signupName"  placeholder="Your name"/>
+      </div>
+
+      <div class="modal-field">
+        <label>Email</label>
+        <input type="email"    id="signupEmail" placeholder="you@email.com"/>
+      </div>
+
+      <div class="modal-field">
+        <label>Password</label>
+        <input type="password" id="signupPass"  placeholder="Min 6 characters"/>
+      </div>
+
+      <button class="modal-btn" onclick="doSignup()">Create Account →</button>
+
+      <p class="modal-switch">
+        Already have an account? <a onclick="switchModalTab('login')">Sign In</a>
+      </p>
+
+    </div>
+
+
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- scripts must be last so the full DOM is ready -->
+<script src="script.js"></script>
+
+
+</body>
+</html>
