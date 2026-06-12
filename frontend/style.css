@@ -1599,7 +1599,13 @@ footer {
   .info-grid        { grid-template-columns: 1fr 1fr; }
 
   /* ── wishlist ── */
-  .wl-hero { padding: 2rem 1rem 1rem; }
+ .wl-hero { padding: 2rem 1rem 1rem; }
+
+.wl-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1.1rem;
+}
 
   /* ── admin ── */
   .admin-content { padding: 1.2rem .85rem; }
