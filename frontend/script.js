@@ -1010,7 +1010,7 @@ async function clickSearch(el) {
   showDetail(m);
 }
 
-/async function loadTrailer(title, year, trailerKey) {
+async function loadTrailer(title, year, trailerKey) {
   const container  = document.getElementById('trailerContainer');
   trailerVideoId   = null;
   trailerIsPlaying = false;
