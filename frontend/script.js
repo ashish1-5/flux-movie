@@ -692,7 +692,7 @@ async function fetchMovie(title) {
 
 async function fetchMovieByTMDBId(tmdbId) {
   try {
-    const r = await fetch(`${TMDB_BASE}/movie/${tmdbId}?api_key=${TMDB_KEY}&language=en-US&append_to_response=credits,release_dates`);
+    const r = await fetch(`${TMDB_BASE}/movie/${tmdbId}?api_key=${TMDB_KEY}&language=en-US&append_to_response=credits,release_dates,videos`);
     const d = await r.json();
     return tmdbToOMDB(d);
   } catch { return null; }
@@ -735,6 +735,8 @@ function tmdbToOMDB(d) {
     Rated:      '—',
     BoxOffice:  d.revenue ? `$${(d.revenue/1e6).toFixed(1)}M` : '—',
     Metascore:  '—',
+    TrailerKey: trailer ? trailer.key : null,
+
   };
 }
 
@@ -1008,13 +1010,36 @@ async function clickSearch(el) {
   showDetail(m);
 }
 
-/* 11.  DETAIL PAGE — trailer, free movie, stream, info */
-
-async function loadTrailer(title, year) {
+/async function loadTrailer(title, year, trailerKey) {
   const container  = document.getElementById('trailerContainer');
   trailerVideoId   = null;
   trailerIsPlaying = false;
   updateSpaceHint();
+
+  // Use TMDB-verified trailer if available — skip YouTube search entirely
+  if (trailerKey) {
+    trailerVideoId = trailerKey;
+    const thumbFB   = ytThumbFB(trailerKey);
+    const thumbHD   = ytThumb(trailerKey);
+    const safeTitle = (title || '').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    container.innerHTML = `
+      <div class="yt-thumb-wrap" onclick="playYTTrailer('${trailerKey}','${safeTitle}')" title="Play trailer — or press Space">
+        <img src="${thumbFB}" id="trailerThumbImg" alt="${safeTitle}" style="object-fit:cover"/>
+        <div class="yt-thumb-overlay"></div>
+        <div class="yt-thumb-play"><svg width="30" height="30" viewBox="0 0 24 24" fill="#fff"><path d="M8 5v14l11-7z"/></svg></div>
+        <div class="yt-thumb-info">
+          <div class="yt-thumb-title">${safeTitle}</div>
+          <div class="yt-thumb-channel"><span class="yt-verified">✓ Official Trailer</span></div>
+        </div>
+      </div>`;
+    const hd = new Image();
+    hd.onload = () => { const el = document.getElementById('trailerThumbImg'); if (el) el.src = thumbHD; };
+    hd.src = thumbHD;
+    updateSpaceHint();
+    return;
+  }
+
+  // Fallback: YouTube search
   const queries = [
     `"${title}" ${year || ''} official trailer`,
     `${title} official trailer ${year || ''}`,
@@ -1050,17 +1075,6 @@ async function loadTrailer(title, year) {
   const hd = new Image();
   hd.onload = () => { const el = document.getElementById('trailerThumbImg'); if (el) el.src = thumbHD; };
   hd.src = thumbHD;
-  updateSpaceHint();
-}
-
-function playYTTrailer(ytId, title) {
-  document.getElementById('trailerContainer').innerHTML = `
-    <div class="yt-player-iframe">
-      <iframe id="trailerIframe"
-        src="https://www.youtube.com/embed/${ytId}?autoplay=1&rel=0&modestbranding=1&enablejsapi=1"
-        allowfullscreen allow="autoplay; encrypted-media" title="${title}"></iframe>
-    </div>`;
-  trailerIsPlaying = true;
   updateSpaceHint();
 }
 
@@ -1211,7 +1225,7 @@ async function loadDetail(movie) {
       </button>`;
 
     await Promise.all([
-      loadTrailer(m.Title || movie.Title, m.Year),
+      loadTrailer(m.Title || movie.Title, m.Year, m.TrailerKey),
       loadYTMovie(m.Title || movie.Title, m.Year),
       Promise.resolve(buildExtServers(imdb)),
       Promise.resolve(renderWatchGrid(sources)),
