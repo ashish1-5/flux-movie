@@ -1,15 +1,12 @@
-// FLUX MOVIE — script.js
-
-/* 1.  CONFIG & CONSTANTS */
-
 const TMDB_KEY  = '429e28badca0bf190c93d31df32dcf4b';
 const TMDB_IMG  = 'https://image.tmdb.org/t/p/w500';
-const TMDB_BASE = 'https://api.themoviedb.org/3';
+const API_BASE      =  'https://flux-movie.onrender.com/api';
+const TMDB_BASE = `${API_BASE}/tmdb`;
 const _tmdbCache = {};
 const WATCHMODE_KEY = 'ixJ5KCa95HMmER3z2WVYTzbqxkPhidiskzmrzsZk';
 const YT_KEY        = 'AIzaSyBnSuF6sbRQfr06ARUlGW0kkuH6mJWhBes';
-const API_BASE      =  'https://flux-movie.onrender.com/api';
 const PER_PAGE      = 12;
+
 
 /* channels/keywords considered "official" for trailer & free-movie search */
 const OFFICIAL_KW = [
