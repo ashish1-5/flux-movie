@@ -854,7 +854,7 @@ async function loadHindiMovies() {
   for (let i = 0; i < pool.length; i += 10) {
     const batch = await Promise.allSettled(pool.slice(i, i + 10).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { all.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 50));
   }
   hindiMovies      = [...all];
   _hindiPageMovies = hindiMovies.slice(0, PER_PAGE);
@@ -871,7 +871,7 @@ async function loadMovies() {
   for (let i = 0; i < pool.length; i += 10) {
     const batch = await Promise.allSettled(pool.slice(i, i + 10).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { all.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
-    await new Promise(r => setTimeout(r, 300));
+    await new Promise(r => setTimeout(r, 50));
   }
   allMovies      = [...all];
   filteredMovies = [...allMovies];
@@ -1295,7 +1295,7 @@ const pool = [...TRENDING_POOL];
   for (let i = 0; i < pool.length; i += 10) {
     const batch = await Promise.allSettled(pool.slice(i, i + 10).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { poolRes.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
-     await new Promise(r => setTimeout(r, 300));
+     await new Promise(r => setTimeout(r, 50));
   }
   const ytRes = await fetchMoviesFromYTThenOMDB([
     'official trailer 2025 hindi movie',
@@ -1430,7 +1430,7 @@ async function loadNewRelPage() {
 const pool = [...TRENDING_POOL].sort(() => Math.random() - .5);  for (let i = 0; i < pool.length; i += 10) {
     const batch = await Promise.allSettled(pool.slice(i, i + 8).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { poolRes.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
-     await new Promise(r => setTimeout(r, 300));
+     await new Promise(r => setTimeout(r, 50));
   }
 
   const ytRes = await fetchMoviesFromYTThenOMDB([
@@ -1551,7 +1551,7 @@ async function loadTopRatedPage() {
   for (let i = 0; i < pool.length; i += 8) {
     const batch = await Promise.allSettled(pool.slice(i, i + 8).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { results.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
-     await new Promise(r => setTimeout(r, 300));
+     await new Promise(r => setTimeout(r, 50));
   }
   topRatedAll = results.sort((a, b) => (parseFloat(b.imdbRating) || 0) - (parseFloat(a.imdbRating) || 0));
   topRatedFiltered = [...topRatedAll];
