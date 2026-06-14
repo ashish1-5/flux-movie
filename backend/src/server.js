@@ -23,18 +23,6 @@ app.use('/api/auth',     authRoutes);
 app.use('/api/wishlist', wishlistRoutes);
 app.use('/api/admin',    adminRoutes);
 
-/* ── health check ── */
-app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
-
-/* ── 404 handler ── */
-app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
-
-/* ── error handler ── */
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ success: false, message: 'Internal server error' });
-});
-
 /* ── tmdb proxy ── */
 const TMDB_KEY = '429e28badca0bf190c93d31df32dcf4b';
 const TMDB_BASE = 'https://api.themoviedb.org/3';
@@ -51,6 +39,18 @@ app.get('/api/tmdb/*', async (req, res) => {
   } catch (err) {
     res.status(500).json({ message: 'TMDB proxy error', error: err.message });
   }
+});
+
+/* ── health check ── */
+app.get('/api/health', (req, res) => res.json({ status: 'ok', time: new Date() }));
+
+/* ── 404 handler ── */
+app.use((req, res) => res.status(404).json({ success: false, message: 'Route not found' }));
+
+/* ── error handler ── */
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
 /* ── start ── */
