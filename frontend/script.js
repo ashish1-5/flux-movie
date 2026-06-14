@@ -2,8 +2,10 @@
 
 /* 1.  CONFIG & CONSTANTS */
 
-// const OMDB_KEY      = '9e32a70b';
-const OMDB_KEY      = '51c4f629';
+const TMDB_KEY  = '429e28badca0bf190c93d31df32dcf4b';
+const TMDB_IMG  = 'https://image.tmdb.org/t/p/w500';
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+const _tmdbCache = {};
 const WATCHMODE_KEY = 'ixJ5KCa95HMmER3z2WVYTzbqxkPhidiskzmrzsZk';
 const YT_KEY        = 'AIzaSyBnSuF6sbRQfr06ARUlGW0kkuH6mJWhBes';
 const API_BASE      =  'https://flux-movie.onrender.com/api';
@@ -219,7 +221,7 @@ function closeModal() { document.getElementById('authModal').classList.remove('o
 function closeModalOutside(e) { if (e.target === document.getElementById('authModal')) closeModal(); }
 
 function clearModalState() {
-  ['loginEmail','loginPassword','signupName','signupEmail','signupPassword']
+ ['loginEmail','loginPass','signupName','signupEmail','signupPass']
     .forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
   document.querySelectorAll('.modal-err,.modal-success').forEach(el => {
     el.textContent = ''; el.classList.remove('show');
@@ -675,59 +677,68 @@ function skCards(n) {
 
 /* 8.  API FETCHERS — OMDB, Watchmode, YouTube */
 
-const _omdbCache = {};
-const CACHE_KEY = 'fm_omdb_cache';
-const CACHE_TTL = 24 * 60 * 60 * 1000; // 24 hours
 
-// Load persisted cache from localStorage on startup
-try {
-  const saved = localStorage.getItem(CACHE_KEY);
-  if (saved) {
-    const { ts, data } = JSON.parse(saved);
-    if (Date.now() - ts < CACHE_TTL) Object.assign(_omdbCache, data);
-    else localStorage.removeItem(CACHE_KEY);
-  }
-} catch {}
 
-function saveCache() {
-  try { localStorage.setItem(CACHE_KEY, JSON.stringify({ ts: Date.now(), data: _omdbCache })); } catch {}
-}
 
 async function fetchMovie(title) {
-  if (_omdbCache[title]) return _omdbCache[title];
+  if (_tmdbCache[title]) return _tmdbCache[title];
   try {
-    const r = await fetch(`https://www.omdbapi.com/?t=${encodeURIComponent(title)}&apikey=${OMDB_KEY}&plot=short`);
-    if (!r.ok) return null;
+    const r = await fetch(`${TMDB_BASE}/search/movie?query=${encodeURIComponent(title)}&api_key=${TMDB_KEY}&language=en-US`);
     const d = await r.json();
-    if (d.Response === 'True') {
-      _omdbCache[title] = d;
-      saveCache();
-      return d;
-    }
-    // try search fallback if exact title not found
-    const rs = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(title)}&apikey=${OMDB_KEY}&type=movie`);
-    if (!rs.ok) return null;
-    const ds = await rs.json();
-    if (ds.Response === 'True' && ds.Search?.length) {
-      const top = ds.Search[0];
-      const rd = await fetch(`https://www.omdbapi.com/?i=${top.imdbID}&apikey=${OMDB_KEY}&plot=short`);
-      const dd = await rd.json();
-      if (dd.Response === 'True') {
-        _omdbCache[title] = dd;
-        saveCache();
-        return dd;
-      }
-    }
+    const t = d.results?.[0];
+    if (!t) return null;
+    const full = await fetchMovieByTMDBId(t.id);
+    if (full) { _tmdbCache[title] = full; return full; }
     return null;
   } catch { return null; }
 }
-async function fetchMovieByID(id) {
+
+async function fetchMovieByTMDBId(tmdbId) {
   try {
-    const r = await fetch(`https://www.omdbapi.com/?i=${id}&apikey=${OMDB_KEY}&plot=full`);
-    if (!r.ok) return null;
+    const r = await fetch(`${TMDB_BASE}/movie/${tmdbId}?api_key=${TMDB_KEY}&language=en-US&append_to_response=credits,release_dates`);
     const d = await r.json();
-    return d.Response === 'True' ? d : null;
+    return tmdbToOMDB(d);
   } catch { return null; }
+}
+
+async function fetchMovieByID(imdbId) {
+  if (imdbId?.startsWith('tmdb_')) return fetchMovieByTMDBId(imdbId.replace('tmdb_', ''));
+  try {
+    const r = await fetch(`${TMDB_BASE}/find/${imdbId}?api_key=${TMDB_KEY}&external_source=imdb_id`);
+    const d = await r.json();
+    const t = d.movie_results?.[0];
+    if (!t) return null;
+    return fetchMovieByTMDBId(t.id);
+  } catch { return null; }
+}
+
+function tmdbToOMDB(d) {
+  const genres   = (d.genres || []).map(g => g.name).join(', ');
+  const cast     = (d.credits?.cast || []).slice(0, 4).map(c => c.name).join(', ');
+  const director = (d.credits?.crew || []).find(c => c.job === 'Director')?.name || '—';
+  const writer   = (d.credits?.crew || []).filter(c => ['Writer','Screenplay','Story'].includes(c.job)).slice(0,2).map(c=>c.name).join(', ') || '—';
+  const lang     = d.original_language === 'hi' ? 'Hindi' : (d.spoken_languages?.[0]?.english_name || 'English');
+  return {
+    imdbID:     d.imdb_id || `tmdb_${d.id}`,
+    tmdbID:     d.id,
+    Title:      d.title || d.original_title,
+    Year:       d.release_date?.split('-')[0] || '—',
+    Poster:     d.poster_path ? `${TMDB_IMG}${d.poster_path}` : null,
+    imdbRating: d.vote_average ? d.vote_average.toFixed(1) : '—',
+    Genre:      genres || '—',
+    Plot:       d.overview || 'No description available.',
+    Type:       'movie',
+    Language:   lang,
+    Runtime:    d.runtime ? `${d.runtime} min` : '—',
+    Director:   director,
+    Writer:     writer,
+    Actors:     cast,
+    Country:    (d.production_countries || []).map(c => c.name).join(', ') || '—',
+    Awards:     '—',
+    Rated:      '—',
+    BoxOffice:  d.revenue ? `$${(d.revenue/1e6).toFixed(1)}M` : '—',
+    Metascore:  '—',
+  };
 }
 
 async function fetchWatchmode(imdbID) {
@@ -769,42 +780,9 @@ function ytThumbFB(id) { return `https://img.youtube.com/vi/${id}/hqdefault.jpg`
 function isOfficial(item, kwList = OFFICIAL_KW) {
   return kwList.some(k => (item.channel || '').toLowerCase().includes(k));
 }
-
-async function fetchMovieNamesFromYT(queries, maxPerQuery = 25) {
-  const seen  = new Set();
-  const names = [];
-  const clean = title => title
-    .replace(/\s*[-–|]\s*(official\s*)?(trailer|teaser|clip|featurette).*/gi, '')
-    .replace(/\s*\(\d{4}\).*/g, '')
-    .replace(/\s*#\S+/g, '')
-    .replace(/\s*\|\s*.*/g, '')
-    .replace(/[™®]/g, '')
-    .trim();
-
-  for (const q of queries) {
-    try {
-      const url = `https://www.googleapis.com/youtube/v3/search?part=snippet`
-        + `&q=${encodeURIComponent(q)}&maxResults=${maxPerQuery}`
-        + `&order=date&type=video&videoCategoryId=1&key=${YT_KEY}`;
-      const r = await fetch(url);
-      const d = await r.json();
-      if (!d.items) continue;
-      for (const item of d.items) {
-        const name = clean(item.snippet?.title || '');
-        if (name.length > 2 && name.length < 60 && !seen.has(name.toLowerCase())) {
-          seen.add(name.toLowerCase());
-          names.push(name);
-        }
-      }
-    } catch {}
-  }
-  return names;
-}
-
 async function fetchMoviesFromYTThenOMDB(queries, limit = 40) {
-  return [];
+  return []; // disabled — TMDB handles this now
 }
-  
 
 /* 9.  MOVIE CARD BUILDER */
 
@@ -993,11 +971,14 @@ document.getElementById('searchInput').addEventListener('input', function () {
       .slice(0, 5);
     if (results.length < 3) {
       try {
-        const r = await fetch(`https://www.omdbapi.com/?s=${encodeURIComponent(q)}&apikey=${OMDB_KEY}&type=movie`);
-        if (r.ok) {
-          const d = await r.json();
-          if (d.Search) results = [...results, ...d.Search.filter(x => !results.find(r => r.imdbID === x.imdbID))].slice(0, 6);
-        }
+const r = await fetch(`${TMDB_BASE}/search/movie?query=${encodeURIComponent(q)}&api_key=${TMDB_KEY}&language=en-US`);
+if (r.ok) {
+  const d = await r.json();
+  if (d.results) results = [...results, ...d.results
+    .filter(x => !results.find(r => r.imdbID === `tmdb_${x.id}`))
+    .map(x => ({ imdbID: `tmdb_${x.id}`, Title: x.title, Year: x.release_date?.split('-')[0], Poster: x.poster_path ? `${TMDB_IMG}${x.poster_path}` : null, Type: 'movie' }))
+  ].slice(0, 6);
+}       
       } catch {}
     }
     if (!results.length) { dd.innerHTML = `<div style="padding:.8rem 1rem;color:var(--muted);font-size:.8rem">No results found.</div>`; return; }
@@ -1449,7 +1430,7 @@ async function loadNewRelPage() {
   grid.innerHTML = skCards(PER_PAGE);
 
   const poolRes = [];
-const pool = [...TRENDING_POOL].sort(() => Math.random() - .5).slice(0, 60);  for (let i = 0; i < pool.length; i += 10) {
+const pool = [...TRENDING_POOL].sort(() => Math.random() - .5);  for (let i = 0; i < pool.length; i += 10) {
     const batch = await Promise.allSettled(pool.slice(i, i + 8).map(t => fetchMovie(t)));
     batch.forEach(r => { if (r.status === 'fulfilled' && r.value) { poolRes.push(r.value); _movieMap[r.value.imdbID] = r.value; } });
      await new Promise(r => setTimeout(r, 300));

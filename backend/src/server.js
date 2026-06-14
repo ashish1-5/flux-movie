@@ -35,6 +35,24 @@ app.use((err, req, res, next) => {
   res.status(500).json({ success: false, message: 'Internal server error' });
 });
 
+/* ── tmdb proxy ── */
+const TMDB_KEY = '429e28badca0bf190c93d31df32dcf4b';
+const TMDB_BASE = 'https://api.themoviedb.org/3';
+
+app.get('/api/tmdb/*', async (req, res) => {
+  try {
+    const tmdbPath = req.params[0];
+    const query = new URLSearchParams(req.query);
+    query.set('api_key', TMDB_KEY);
+    const url = `${TMDB_BASE}/${tmdbPath}?${query.toString()}`;
+    const r = await fetch(url);
+    const data = await r.json();
+    res.status(r.status).json(data);
+  } catch (err) {
+    res.status(500).json({ message: 'TMDB proxy error', error: err.message });
+  }
+});
+
 /* ── start ── */
 const PORT = process.env.PORT || 5000;
 
