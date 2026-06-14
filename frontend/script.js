@@ -715,6 +715,8 @@ function tmdbToOMDB(d) {
   const director = (d.credits?.crew || []).find(c => c.job === 'Director')?.name || '—';
   const writer   = (d.credits?.crew || []).filter(c => ['Writer','Screenplay','Story'].includes(c.job)).slice(0,2).map(c=>c.name).join(', ') || '—';
   const lang     = d.original_language === 'hi' ? 'Hindi' : (d.spoken_languages?.[0]?.english_name || 'English');
+  const trailer  = (d.videos?.results || []).find(v => v.site === 'YouTube' && v.type === 'Trailer' && v.official)
+                 || (d.videos?.results || []).find(v => v.site === 'YouTube' && v.type === 'Trailer');
   return {
     imdbID:     d.imdb_id || `tmdb_${d.id}`,
     tmdbID:     d.id,
